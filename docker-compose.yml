@@ -1,0 +1,43 @@
+version: "3.8"
+
+networks:
+  default:
+    external: true
+    name: aosom-streaming_default
+
+services:
+# -------------------------------------------------------------------------
+# Telegraf - SNMP Collector Agent
+# -------------------------------------------------------------------------
+  telegraf-snmp-juniper:
+    hostname: telegraf-snmp-juniper
+    container_name: aosom-streaming_telegraf-snmp-juniper
+    image: telegraf-snmp:1.20.3
+    environment: 
+      # ##########################
+      # For SNMP
+      # TELEGRAF_SNMP_AGENTS - remember to keep variable as one string -> without space
+      - TELEGRAF_SNMP_AGENTS="10.240.40.20:161","10.240.40.10:161"
+      - TELEGRAF_SNMP_VERSION=3
+      #- TELEGRAF_SNMP_COMMNITY=public
+      - TELEGRAF_SNMP_TOKEN=Juniper123
+      - TELEGRAF_SNMP_SEC_NAME=user1snmpv3
+      - TELEGRAF_SNMP_SEC_LEVEL=authPriv
+      - TELEGRAF_SNMP_PRIV_PROTOCOL=AES
+      - TELEGRAF_SNMP_AUTH_PROTOCOL=MD5
+      # #######################
+      # For OUTPUT-InfluxDB
+      - INFLUXDB_ADMIN_USER=admin
+      - INFLUXDB_ADMIN_PASSWORD=adminadmin
+    command: sh -c "
+      cat /etc/telegraf/telegraf-snmp-MAIN.conf 
+          /etc/telegraf/telegraf-snmp-OUTPUT-influxdb.conf 
+          /etc/telegraf/telegraf-snmp-INPUT-SNMP_IF-MIB.conf 
+          /etc/telegraf/telegraf-snmp-INPUT-SNMP_BGP4-MIB.conf > /tmp/telegraf.conf &&
+      sed -e 's|\"AGENTS\"|'"\$${TELEGRAF_SNMP_AGENTS}"'|' -i /tmp/telegraf.conf &&
+      telegraf -debug --config /tmp/telegraf.conf"
+    pull_policy: never
+    restart: unless-stopped
+    volumes:
+      - ./config/telegraf/:/etc/telegraf/
+      - /etc/localtime:/etc/localtime
