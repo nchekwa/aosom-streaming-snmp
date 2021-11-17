@@ -23,7 +23,8 @@ Tested with: [apstra/telegraf:1.20.3]<br>
 
 
 ## Juniper SNMPv3 example configuration
-```
+Stanza:<br>
+```code
 snmp {
     contact "Jhone Doe, +1234567890";
     v3 {
@@ -66,4 +67,16 @@ snmp {
     }
 routing-instance-access;
 }
+```
+<br>
+SET Mode:<br>
+
+```code
+set snmp contact "Jhone Doe, +1234567890"
+set snmp v3 usm local-engine user user1snmpv3 authentication-md5 authentication-password "Juniper123"
+set snmp v3 usm local-engine user user1snmpv3 privacy-aes128 privacy-password "Juniper123"
+set snmp v3 vacm security-to-group security-model usm security-name user1snmpv3 group GROUP1
+set snmp v3 vacm access group GROUP1 default-context-prefix security-model usm security-level authentication read-view all
+set snmp view all oid .1
+set snmp routing-instance-access
 ```
